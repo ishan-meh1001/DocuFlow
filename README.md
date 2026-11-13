@@ -42,3 +42,5 @@ npm run build
 ## Hosted setup (deferred)
 
 The code targets Vercel, managed PostgreSQL with `pgvector`, and Inngest. Provision those services only when ready to deploy; configure secrets in their environment-variable settings rather than committing them. Add a production identity provider before offering the dashboard to multiple users.
+
+configured through Vercel.
