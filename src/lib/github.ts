@@ -5,6 +5,7 @@ import type { SourceFile } from "./analysis";
 export const repositoryPushSchema = z.object({
   deliveryId: z.string().uuid(),
   installationId: z.number().int().positive(),
+  workspaceId: z.string().uuid(),
   repository: z.object({
     id: z.number().int().positive(),
     fullName: z.string().min(1),

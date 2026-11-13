@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { inngest } from "@/lib/inngest";
 import { verifyGitHubSignature } from "@/lib/github-signature";
+import { getPool } from "@/lib/db";
 
 const pushEventSchema = z.object({
   installation: z.object({ id: z.number().int().positive() }),
@@ -52,6 +53,25 @@ export async function POST(request: Request): Promise<Response> {
   if (deleted || /^0{40}$/i.test(after)) {
     return Response.json({ status: "ignored", reason: "branch-deleted" }, { status: 202 });
   }
+
+  if (!process.env.DATABASE_URL) {
+    return Response.json({ error: "Database is not configured." }, { status: 503 });
+  }
+  let workspaceId: string | undefined;
+  try {
+    const result = await getPool().query<{ workspace_id: string }>(
+      "SELECT workspace_id::text FROM github_installations WHERE installation_id = $1",
+      [installation.id],
+    );
+    workspaceId = result.rows[0]?.workspace_id;
+  } catch (error) {
+    console.error("Could not resolve the GitHub installation workspace.", error);
+    return Response.json({ error: "Could not resolve the GitHub installation." }, { status: 503 });
+  }
+  if (!workspaceId) {
+    return Response.json({ error: "Install the GitHub App from a DocuFlow workspace first." }, { status: 403 });
+  }
+
   try {
     await inngest.send({
       id: deliveryId,
@@ -59,6 +79,7 @@ export async function POST(request: Request): Promise<Response> {
       data: {
         deliveryId,
         installationId: installation.id,
+        workspaceId,
         repository: {
           id: repository.id,
           fullName: repository.full_name,
@@ -70,7 +91,8 @@ export async function POST(request: Request): Promise<Response> {
         commitSha: after,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Could not queue the repository analysis.", error);
     return Response.json({ error: "Could not queue the repository analysis." }, { status: 503 });
   }
 

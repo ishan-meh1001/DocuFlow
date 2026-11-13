@@ -8,9 +8,11 @@ if (!connectionString) {
 
 const pool = new Pool({ connectionString, max: 1 });
 try {
-  const migration = await readFile(new URL("../db/migrations/001_initial.sql", import.meta.url), "utf8");
-  await pool.query(migration);
-  console.log("Applied db/migrations/001_initial.sql");
+  for (const migrationName of ["001_initial.sql", "002_multi_user.sql"]) {
+    const migration = await readFile(new URL(`../db/migrations/${migrationName}`, import.meta.url), "utf8");
+    await pool.query(migration);
+    console.log(`Applied db/migrations/${migrationName}`);
+  }
 } finally {
   await pool.end();
 }
