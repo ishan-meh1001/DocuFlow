@@ -12,7 +12,7 @@ export function getPool(): Pool {
 
   globalThis.docuflowPool ??= new Pool({
     connectionString,
-    max: 5,
+    max: 1,
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 5_000,
   });

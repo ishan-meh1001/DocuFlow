@@ -67,6 +67,11 @@
 .loginForm button { display: flex; align-items: center; justify-content: space-between; height: 43px; margin-top: 6px; padding: 0 13px; border: 0; background: #a9d681; color: #182017; font: 12px var(--font-geist-mono); cursor: pointer; }
 .loginForm button:hover { background: #bde39c; }
 .error { color: #e48369 !important; }
+.notice { color: #a9d681 !important; }
+.authSwitch { margin-top: 20px; color: #89938e; font-size: 11px; }
+.authSwitch a { color: #a9d681; }
+.installButton { display: inline-flex; gap: 8px; margin-top: 15px; padding: 0; border: 0; background: none; color: #a9d681; font: 10px var(--font-geist-mono); cursor: pointer; }
+.installButton:hover { color: #d3edbc; }
 .emptyState { display: grid; min-height: 55vh; align-content: center; justify-items: start; }
 .emptyState h1 { max-width: 550px; margin: 0; font-size: clamp(42px, 6vw, 68px); font-weight: 500; letter-spacing: -.06em; }
 .emptyState > p:last-child { max-width: 560px; color: #9aa49f; font-size: 13px; line-height: 1.8; }

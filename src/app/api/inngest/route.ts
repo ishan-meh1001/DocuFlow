@@ -4,7 +4,12 @@ import { repositoryPushSchema } from "@/lib/github";
 import { inngest } from "@/lib/inngest";
 
 const analyzeRepository = inngest.createFunction(
-  { id: "analyze-github-push", retries: 3, triggers: [{ event: "docuflow/github.push" }] },
+  {
+    id: "analyze-github-push",
+    retries: 3,
+    concurrency: { limit: 1, key: "event.data.repository.id" },
+    triggers: [{ event: "docuflow/github.push" }],
+  },
   async ({ event, step }) => step.run("analyze-repository", () =>
     analyzePush(repositoryPushSchema.parse(event.data)),
   ),

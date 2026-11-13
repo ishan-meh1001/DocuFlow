@@ -10,6 +10,23 @@ function toVectorLiteral(vector: number[]): string {
   return `[${vector.join(",")}]`;
 }
 
+async function createEmbeddings(documents: ReturnType<typeof getMarkdownDocuments>) {
+  const embeddings: Array<{
+    path: string;
+    contentHash: string;
+    vector: number[];
+  }> = [];
+  for (let index = 0; index < documents.length; index += 5) {
+    const batch = documents.slice(index, index + 5);
+    embeddings.push(...await Promise.all(batch.map(async (document) => ({
+      path: document.path,
+      contentHash: createHash("sha256").update(document.content).digest("hex"),
+      vector: await createEmbedding(document.content),
+    }))));
+  }
+  return embeddings;
+}
+
 async function insertFindings(
   client: PoolClient,
   repositoryId: string,
@@ -34,9 +51,9 @@ export async function analyzePush(push: RepositoryPush): Promise<{ status: "comp
   if (alreadyProcessed.rowCount) return { status: "duplicate" };
 
   const repositoryResult = await pool.query<{ id: string }>(
-    `INSERT INTO repositories (github_repo_id, full_name, owner, name, html_url, default_branch, installation_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     ON CONFLICT (github_repo_id) DO UPDATE SET
+    `INSERT INTO repositories (workspace_id, github_repo_id, full_name, owner, name, html_url, default_branch, installation_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     ON CONFLICT (workspace_id, github_repo_id) DO UPDATE SET
        full_name = EXCLUDED.full_name,
        owner = EXCLUDED.owner,
        name = EXCLUDED.name,
@@ -46,6 +63,7 @@ export async function analyzePush(push: RepositoryPush): Promise<{ status: "comp
        updated_at = now()
      RETURNING id::text`,
     [
+      push.workspaceId,
       push.repository.id,
       push.repository.fullName,
       push.repository.owner,
@@ -67,11 +85,7 @@ export async function analyzePush(push: RepositoryPush): Promise<{ status: "comp
     const files = await fetchRepositoryFiles(push);
     const findings = analyzeFiles(files);
     const documents = getMarkdownDocuments(files);
-    const embeddings = await Promise.all(documents.map(async (document) => ({
-      path: document.path,
-      contentHash: createHash("sha256").update(document.content).digest("hex"),
-      vector: await createEmbedding(document.content),
-    })));
+    const embeddings = await createEmbeddings(documents);
     const duplicateFindings: Finding[] = [];
     const seenPairs = new Set<string>();
 

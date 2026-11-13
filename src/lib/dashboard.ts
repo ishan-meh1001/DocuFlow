@@ -17,7 +17,7 @@ export type DashboardFinding = {
   createdAt: string;
 };
 
-export async function getDashboardData(): Promise<{
+export async function getDashboardData(workspaceId: string): Promise<{
   repositories: DashboardRepository[];
   recentFindings: DashboardFinding[];
 }> {
@@ -38,8 +38,9 @@ export async function getDashboardData(): Promise<{
         WHERE repository_id = r.id
         ORDER BY started_at DESC LIMIT 1
       ) latest ON true
+      WHERE r.workspace_id = $1
       ORDER BY r.full_name
-    `),
+    `, [workspaceId]),
     pool.query<{
       id: string;
       title: string;
@@ -51,9 +52,10 @@ export async function getDashboardData(): Promise<{
       SELECT f.id::text, f.title, f.path, f.severity, r.full_name, f.created_at
       FROM findings f
       JOIN repositories r ON r.id = f.repository_id
+      WHERE r.workspace_id = $1
       ORDER BY f.created_at DESC
       LIMIT 8
-    `),
+    `, [workspaceId]),
   ]);
 
   return {
