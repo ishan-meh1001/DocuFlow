@@ -36,16 +36,31 @@ export async function signUp(formData: FormData): Promise<void> {
     || !email
     || password.length < 8
   ) {
-    redirect("/?mode=signup&error=signup");
+    redirect("/?mode=signup&error=signup-input");
+  }
+
+  let emailRedirectTo: string;
+  try {
+    emailRedirectTo = `${getSiteUrl()}/auth/callback`;
+  } catch (error) {
+    console.error("Supabase sign-up URL is not configured.", error);
+    redirect("/?mode=signup&error=signup-config");
   }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${getSiteUrl()}/auth/callback` },
+    options: { emailRedirectTo },
   });
-  if (error) redirect("/?mode=signup&error=signup");
+  if (error) {
+    console.error("Supabase account creation failed.", {
+      code: error.code,
+      status: error.status,
+      message: error.message,
+    });
+    redirect("/?mode=signup&error=signup-failed");
+  }
   if (data.session) redirect("/");
   redirect("/?mode=login&notice=check-email");
 }
