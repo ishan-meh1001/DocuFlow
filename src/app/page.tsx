@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { connection } from "next/server";
 import { connectGitHubApp, login, logout, signUp } from "./actions";
 import styles from "./page.module.css";
 import { getAuthenticatedUser, isSupabaseAuthConfigured } from "@/lib/auth";
@@ -41,7 +43,25 @@ function getErrorMessage(error?: string): string | null {
   }
 }
 
-export default async function Home({ searchParams }: HomeProps) {
+export default function Home(props: HomeProps) {
+  return (
+    <Suspense
+      fallback={(
+        <main className={styles.page}>
+          <section className={styles.loginCard}>
+            <p className={styles.eyebrow}>DOCUFLOW / ACCOUNTS</p>
+            <p>Loading your workspace...</p>
+          </section>
+        </main>
+      )}
+    >
+      <HomeContent {...props} />
+    </Suspense>
+  );
+}
+
+async function HomeContent({ searchParams }: HomeProps) {
+  await connection();
   const { error, github, mode, notice } = await searchParams;
 
   if (!isSupabaseAuthConfigured()) {
