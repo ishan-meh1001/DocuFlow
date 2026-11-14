@@ -20,8 +20,13 @@ function getErrorMessage(error?: string): string | null {
   switch (error) {
     case "credentials":
       return "Email or password is incorrect.";
+    case "signup-input":
+      return "Enter a valid email and use a password with at least 8 characters.";
+    case "signup-config":
+      return "Account creation is not configured correctly. Check the production site URL and Supabase Auth settings.";
+    case "signup-failed":
     case "signup":
-      return "Could not create the account. Check the email and use a password with at least 8 characters.";
+      return "Supabase could not create the account. If you already have an account, sign in; otherwise check Supabase Auth settings and the Vercel function logs.";
     case "confirmation":
       return "The email confirmation link could not be verified. Request a new one and try again.";
     case "github":
