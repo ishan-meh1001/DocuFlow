@@ -179,7 +179,6 @@ async function HomeContent({ searchParams }: HomeProps) {
 
         <div className={styles.hero}>
           <div>
-            <p className={styles.eyebrow}>DOCUMENTATION INTELLIGENCE</p>
             <h1>Know when your docs<br /><em>fall behind.</em></h1>
             <p className={styles.heroCopy}>A private workspace compares documentation with the code that ships and surfaces drift before it reaches your users.</p>
           </div>
