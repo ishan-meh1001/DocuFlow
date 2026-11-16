@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { connectGitHubApp, login, logout, signUp } from "./actions";
 import styles from "./page.module.css";
 import { getAuthenticatedUser, isSupabaseAuthConfigured } from "@/lib/auth";
-import { getDashboardData } from "@/lib/dashboard";
+import { getAnalysisIndicator, getDashboardData } from "@/lib/dashboard";
 import { getWorkspaceIdForUser } from "@/lib/workspaces";
 
 export const instant = false;
@@ -161,7 +161,8 @@ async function HomeContent({ searchParams }: HomeProps) {
     );
   }
 
-  const { repositories, recentFindings } = await getDashboardData(workspaceId);
+  const { repositories, recentFindings, latestAnalysis } = await getDashboardData(workspaceId);
+  const analysisIndicator = getAnalysisIndicator(latestAnalysis);
 
   return (
     <main className={styles.page}>
@@ -188,7 +189,13 @@ async function HomeContent({ searchParams }: HomeProps) {
         <div className={styles.metrics}>
           <article><span>Repositories</span><strong>{repositories.length.toString().padStart(2, "0")}</strong><small>connected to your workspace</small></article>
           <article><span>Open findings</span><strong>{recentFindings.length.toString().padStart(2, "0")}</strong><small>from the latest analyses</small></article>
-          <article><span>Analysis engine</span><strong className={styles.engine}>READY<span>●</span></strong><small>GitHub · Markdown · TypeScript</small></article>
+          <article>
+            <span>Latest analysis</span>
+            <strong className={styles.analysisStatus} data-state={analysisIndicator.state}>
+              {analysisIndicator.label}<span aria-hidden="true">●</span>
+            </strong>
+            <small>{analysisIndicator.detail}</small>
+          </article>
         </div>
 
         <div className={styles.contentGrid}>
