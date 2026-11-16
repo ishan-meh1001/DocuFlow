@@ -31,8 +31,11 @@
 .metrics article:last-child { border: 0; }
 .metrics article > span,.metrics small { display: block; color: #89938e; font-size: 11px; }
 .metrics strong { display: block; margin: 7px 0 3px; color: #e6e9e5; font-size: 27px; font-weight: 500; letter-spacing: -.04em; }
-.metrics .engine { color: #a9d681; font: 18px var(--font-geist-mono); letter-spacing: .02em; }
-.engine span { margin-left: 8px; font-size: 8px; vertical-align: 3px; }
+.metrics .analysisStatus { color: #a9d681; font: 18px var(--font-geist-mono); letter-spacing: .02em; }
+.analysisStatus span { margin-left: 8px; font-size: 8px; vertical-align: 3px; }
+.metrics .analysisStatus[data-state="running"] { color: #e0b766; }
+.metrics .analysisStatus[data-state="failed"] { color: #e48369; }
+.metrics .analysisStatus[data-state="waiting"] { color: #89938e; }
 .contentGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .panel { min-height: 290px; border: 1px solid #29302e; background: rgb(20 24 23 / 62%); }
 .panelHeading { display: flex; align-items: center; justify-content: space-between; padding: 19px 20px 16px; border-bottom: 1px solid #29302e; }

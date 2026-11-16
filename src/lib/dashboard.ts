@@ -17,12 +17,55 @@ export type DashboardFinding = {
   createdAt: string;
 };
 
+export type LatestAnalysis = {
+  status: "running" | "completed" | "failed";
+  repositoryName: string;
+};
+
+export type AnalysisIndicator = {
+  state: "waiting" | LatestAnalysis["status"];
+  label: "WAITING" | "RUNNING" | "SUCCEEDED" | "FAILED";
+  detail: string;
+};
+
+export function getAnalysisIndicator(latestAnalysis: LatestAnalysis | null): AnalysisIndicator {
+  if (!latestAnalysis) {
+    return {
+      state: "waiting",
+      label: "WAITING",
+      detail: "A repository push will start the first analysis.",
+    };
+  }
+
+  switch (latestAnalysis.status) {
+    case "running":
+      return {
+        state: "running",
+        label: "RUNNING",
+        detail: `Analyzing ${latestAnalysis.repositoryName}.`,
+      };
+    case "failed":
+      return {
+        state: "failed",
+        label: "FAILED",
+        detail: `Latest run for ${latestAnalysis.repositoryName} failed.`,
+      };
+    case "completed":
+      return {
+        state: "completed",
+        label: "SUCCEEDED",
+        detail: `Latest run for ${latestAnalysis.repositoryName} completed.`,
+      };
+  }
+}
+
 export async function getDashboardData(workspaceId: string): Promise<{
   repositories: DashboardRepository[];
   recentFindings: DashboardFinding[];
+  latestAnalysis: LatestAnalysis | null;
 }> {
   const pool = getPool();
-  const [repositoryResult, findingResult] = await Promise.all([
+  const [repositoryResult, findingResult, latestAnalysisResult] = await Promise.all([
     pool.query<{
       id: string;
       full_name: string;
@@ -56,6 +99,17 @@ export async function getDashboardData(workspaceId: string): Promise<{
       ORDER BY f.created_at DESC
       LIMIT 8
     `, [workspaceId]),
+    pool.query<{
+      status: LatestAnalysis["status"];
+      repository_name: string;
+    }>(`
+      SELECT ar.status, r.full_name AS repository_name
+      FROM analysis_runs ar
+      JOIN repositories r ON r.id = ar.repository_id
+      WHERE r.workspace_id = $1
+      ORDER BY ar.started_at DESC, ar.id DESC
+      LIMIT 1
+    `, [workspaceId]),
   ]);
 
   return {
@@ -74,5 +128,11 @@ export async function getDashboardData(workspaceId: string): Promise<{
       repositoryName: row.full_name,
       createdAt: new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(row.created_at),
     })),
+    latestAnalysis: latestAnalysisResult.rows[0]
+      ? {
+          status: latestAnalysisResult.rows[0].status,
+          repositoryName: latestAnalysisResult.rows[0].repository_name,
+        }
+      : null,
   };
 }
